@@ -87,13 +87,33 @@ jobs:
           }
           EOF
 
+          # Create a minimal AndroidManifest.xml so the build doesn't crash on missing manifest
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application
+                  android:allowBackup="true"
+                  android:label="VoidOnTop Panel"
+                  android:supportsRtl="true"
+                  android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.action.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
       - name: Initialize Gradle Wrapper
         run: |
           gradle wrapper --gradle-version 8.4
           chmod +x gradlew
 
       - name: Build Debug APK with Gradle
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
