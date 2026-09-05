@@ -1,0 +1,25 @@
+import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.GestureDescription
+import android.graphics.Path
+import android.view.accessibility.AccessibilityEvent
+
+class AutoPlayService : AccessibilityService() {
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
+    override fun onInterrupt() {}
+
+    fun performSwipe(startX: Float, startY: Float, endX: Float, endY: Float) {
+        val path = Path().apply {
+            moveTo(startX, startY)
+            lineTo(endX, endY)
+        }
+        val gestureBuilder = GestureDescription.Builder()
+        val strokeBuilder = GestureDescription.StrokeDescription(path, 0, 200)
+        gestureBuilder.addStroke(strokeBuilder)
+
+        dispatchGesture(gestureBuilder.build(), object : GestureResultCallback() {
+            override fun onCompleted(gestureDescription: GestureDescription?) {
+                super.onCompleted(gestureDescription)
+            }
+        }, null)
+    }
+}
