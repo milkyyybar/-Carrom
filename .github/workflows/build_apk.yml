@@ -24,7 +24,7 @@ jobs:
 
       - name: Create Android Project Structure
         run: |
-          mkdir -p app/src/main/java/com/example/carrompanel app/src/main/res/xml
+          mkdir -p app/src/main/java/com/example/carrompanel app/src/main/res/xml gradle/wrapper
           
           cat << 'EOF' > settings.gradle
           pluginManagement {
@@ -106,7 +106,6 @@ jobs:
           </manifest>
           EOF
 
-          # Create a basic MainActivity so compilation succeeds
           cat << 'EOF' > app/src/main/java/com/example/carrompanel/MainActivity.kt
           package com.example.carrompanel
 
@@ -120,10 +119,22 @@ jobs:
           }
           EOF
 
-      - name: Initialize Gradle Wrapper
-        run: |
-          gradle wrapper --gradle-version 8.2
+          cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
+          networkTimeout=10000
+          validateDistributionUrl=true
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+
+          curl -s https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+          curl -s https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradlew -o gradlew
           chmod +x gradlew
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build Debug APK with Gradle
         run: ./gradlew assembleDebug --stacktrace
