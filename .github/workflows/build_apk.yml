@@ -22,14 +22,49 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Create Android Project Structure Automatically
+        run: |
+          mkdir -p app/src/main/java/com/example/carrompanel app/src/main/res/xml app/src/main/res/values .github/workflows
+          
+          # Root settings.gradle
+          if [ ! -f "settings.gradle" ]; then
+            echo 'pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }' > settings.gradle
+            echo 'dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }' >> settings.gradle
+            echo 'rootProject.name = "VoidOnTop Panel"' >> settings.gradle
+            echo 'include ":app"' >> settings.gradle
+          fi
+
+          # Root build.gradle
+          if [ ! -f "build.gradle" ]; then
+            echo 'plugins {' > build.gradle
+            echo '    id "com.android.application" version "8.2.0" apply false' >> build.gradle
+            echo '    id "org.jetbrains.kotlin.android" version "1.9.0" apply false' >> build.gradle
+            echo '}' >> build.gradle
+          fi
+
+          # App-level build.gradle
+          if [ ! -f "app/build.gradle" ]; then
+            echo 'plugins { id "com.android.application"; id "org.jetbrains.kotlin.android" }' > app/build.gradle
+            echo 'android {' >> app/build.gradle
+            echo '    namespace "com.example.carrompanel"' >> app/build.gradle
+            echo '    compileSdk 34' >> app/build.gradle
+            echo '    defaultConfig { applicationId "com.example.carrompanel"; minSdk 24; targetSdk 34; versionCode 1; versionName "1.0" }' >> app/build.gradle
+            echo '    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }' >> app/build.gradle
+            echo '    kotlinOptions { jvmTarget = "17" }' >> app/build.gradle
+            echo '}' >> app/build.gradle
+            echo 'dependencies {' >> app/build.gradle
+            echo '    implementation "androidx.core:core-ktx:1.12.0"' >> app/build.gradle
+            echo '    implementation "androidx.appcompat:appcompat:1.6.1"' >> app/build.gradle
+            echo '    implementation "com.google.android.material:material:1.11.0"' >> app/build.gradle
+            echo '}' >> app/build.gradle
+          fi
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Generate Gradle Wrapper if missing
+      - name: Initialize Gradle Wrapper
         run: |
-          if [ ! -f "./gradlew" ]; then
-            gradle wrapper
-          fi
+          gradle wrapper --gradle-version 8.5
           chmod +x gradlew
 
       - name: Build Debug APK with Gradle
