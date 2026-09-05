@@ -47,8 +47,8 @@ jobs:
 
           cat << 'EOF' > build.gradle
           plugins {
-              id 'com.android.application' version '8.2.2' apply false
-              id 'org.jetbrains.kotlin.android' version '1.9.24' apply false
+              id 'com.android.application' version '8.1.4' apply false
+              id 'org.jetbrains.kotlin.android' version '1.9.0' apply false
           }
           EOF
 
@@ -87,7 +87,6 @@ jobs:
           }
           EOF
 
-          # Create a minimal AndroidManifest.xml so the build doesn't crash on missing manifest
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
@@ -107,9 +106,23 @@ jobs:
           </manifest>
           EOF
 
+          # Create a basic MainActivity so compilation succeeds
+          cat << 'EOF' > app/src/main/java/com/example/carrompanel/MainActivity.kt
+          package com.example.carrompanel
+
+          import android.os.Bundle
+          import androidx.appcompat.app.AppCompatActivity
+
+          class MainActivity : AppCompatActivity() {
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+              }
+          }
+          EOF
+
       - name: Initialize Gradle Wrapper
         run: |
-          gradle wrapper --gradle-version 8.4
+          gradle wrapper --gradle-version 8.2
           chmod +x gradlew
 
       - name: Build Debug APK with Gradle
