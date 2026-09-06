@@ -24,7 +24,7 @@ jobs:
 
       - name: Create Real Functional App Files
         run: |
-          mkdir -p app/src/main/java/com/example/carrompanel app/src/main/res/layout app/src/main/res/values gradle/wrapper
+          mkdir -p app/src/main/java/com/voidontop/panel app/src/main/res/layout app/src/main/res/values gradle/wrapper
 
           cat << 'EOF' > settings.gradle
           pluginManagement {
@@ -59,11 +59,11 @@ jobs:
           }
 
           android {
-              namespace 'com.example.carrompanel'
+              namespace 'com.voidontop.panel'
               compileSdk 34
 
               defaultConfig {
-                  applicationId 'com.example.carrompanel'
+                  applicationId 'com.voidontop.panel'
                   minSdk 24
                   targetSdk 34
                   versionCode 1
@@ -171,8 +171,8 @@ jobs:
           </LinearLayout>
           EOF
 
-          cat << 'EOF' > app/src/main/java/com/example/carrompanel/MainActivity.kt
-          package com.example.carrompanel
+          cat << 'EOF' > app/src/main/java/com/voidontop/panel/MainActivity.kt
+          package com.voidontop.panel
 
           import android.os.Bundle
           import android.widget.Button
