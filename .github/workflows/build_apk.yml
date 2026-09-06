@@ -47,8 +47,8 @@ jobs:
 
           cat << 'EOF' > build.gradle
           plugins {
-              id 'com.android.application' version '8.1.4' apply false
-              id 'org.jetbrains.kotlin.android' version '1.9.0' apply false
+              id 'com.android.application' version '8.2.0' apply false
+              id 'org.jetbrains.kotlin.android' version '1.9.20' apply false
           }
           EOF
 
@@ -122,19 +122,19 @@ jobs:
           cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
           distributionBase=GRADLE_USER_HOME
           distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
           networkTimeout=10000
           validateDistributionUrl=true
           zipStoreBase=GRADLE_USER_HOME
           zipStorePath=wrapper/dists
           EOF
 
-          curl -s https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
-          curl -s https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradlew -o gradlew
+          curl -s https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+          curl -s https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradlew -o gradlew
           chmod +x gradlew
 
-      - name: Build Debug APK with Plain Console Output
-        run: ./gradlew assembleDebug --console=plain
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
