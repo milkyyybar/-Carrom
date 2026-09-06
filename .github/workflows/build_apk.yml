@@ -22,9 +22,14 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Create Real Functional App Files
+      - name: Assemble Repository Project
         run: |
-          mkdir -p app/src/main/java/com/voidontop/panel app/src/main/res/layout app/src/main/res/values gradle/wrapper
+          mkdir -p app/src/main/java/com/voidontop/panel app/src/main/res/layout app/src/main/res/values app/src/main/assets gradle/wrapper
+
+          # Copy assets if they exist in the repository root
+          if [ -d "assets" ]; then
+              cp -r assets/* app/src/main/assets/
+          fi
 
           cat << 'EOF' > settings.gradle
           pluginManagement {
@@ -135,7 +140,7 @@ jobs:
                   android:id="@+id/statusText"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:text="Status: Panel Inactive"
+                  android:text="Status: Panel Ready"
                   android:textColor="#B0BEC5"
                   android:textSize="14sp"
                   android:gravity="center"
@@ -145,76 +150,81 @@ jobs:
                   android:id="@+id/btnToggle"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:text="Activate Panel"
+                  android:text="Activate Overlay"
                   android:backgroundTint="#00E676"
                   android:textColor="#000000"
                   android:textStyle="bold"
                   android:layout_marginBottom="16dp" />
 
               <Button
-                  android:id="@+id/btnFeature1"
+                  android:id="@+id/btnAimAssist"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:text="Enable Aim Assist"
+                  android:text="Toggle Aim Assist"
                   android:backgroundTint="#1E1E1E"
                   android:textColor="#FFFFFF"
                   android:layout_marginBottom="12dp" />
 
               <Button
-                  android:id="@+id/btnFeature2"
+                  android:id="@+id/btnSpeedHack"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:text="Enable Speed Hack"
+                  android:text="Toggle Speed Hack"
                   android:backgroundTint="#1E1E1E"
                   android:textColor="#FFFFFF" />
 
           </LinearLayout>
           EOF
 
-          cat << 'EOF' > app/src/main/java/com/voidontop/panel/MainActivity.kt
-          package com.voidontop.panel
+          # If custom Kotlin files exist in the repo root, copy them over; otherwise, create a robust MainActivity
+          if [ -f "MainActivity.kt" ]; then
+              cp MainActivity.kt app/src/main/java/com/voidontop/panel/MainActivity.kt
+          else
+              cat << 'EOF' > app/src/main/java/com/voidontop/panel/MainActivity.kt
+              package com.voidontop.panel
 
-          import android.os.Bundle
-          import android.widget.Button
-          import android.widget.TextView
-          import android.widget.Toast
-          import androidx.appcompat.app.AppCompatActivity
+              import android.os.Bundle
+              import android.widget.Button
+              import android.widget.TextView
+              import android.widget.Toast
+              import androidx.appcompat.app.AppCompatActivity
 
-          class MainActivity : AppCompatActivity() {
-              private var isActive = false
+              class MainActivity : AppCompatActivity() {
+                  private var isActive = false
 
-              override fun onCreate(savedInstanceState: Bundle?) {
-                  super.onCreate(savedInstanceState)
-                  setContentView(R.layout.activity_main)
+                  override fun onCreate(savedInstanceState: Bundle?) {
+                      super.onCreate(savedInstanceState)
+                      setContentView(R.layout.activity_main)
 
-                  val statusText = findViewById<TextView>(R.id.statusText)
-                  val btnToggle = findViewById<Button>(R.id.btnToggle)
-                  val btnFeature1 = findViewById<Button>(R.id.btnFeature1)
-                  val btnFeature2 = findViewById<Button>(R.id.btnFeature2)
+                      val statusText = findViewById<TextView>(R.id.statusText)
+                      val btnToggle = findViewById<Button>(R.id.btnToggle)
+                      val btnAimAssist = findViewById<Button>(R.id.btnAimAssist)
+                      val btnSpeedHack = findViewById<Button>(R.id.btnSpeedHack)
 
-                  btnToggle.setOnClickListener {
-                      isActive = !isActive
-                      if (isActive) {
-                          statusText.text = "Status: Panel Active & Running"
-                          btnToggle.text = "Deactivate Panel"
-                          Toast.makeText(this, "VoidOnTop Activated!", Toast.LENGTH_SHORT).show()
-                      } else {
-                          statusText.text = "Status: Panel Inactive"
-                          btnToggle.text = "Activate Panel"
-                          Toast.makeText(this, "VoidOnTop Deactivated", Toast.LENGTH_SHORT).show()
+                      btnToggle.setOnClickListener {
+                          isActive = !isActive
+                          if (isActive) {
+                              statusText.text = "Status: Overlay Active"
+                              btnToggle.text = "Deactivate Overlay"
+                              Toast.makeText(this, "VoidOnTop Service Started", Toast.LENGTH_SHORT).show()
+                          } else {
+                              statusText.text = "Status: Panel Ready"
+                              btnToggle.text = "Activate Overlay"
+                              Toast.makeText(this, "VoidOnTop Service Stopped", Toast.LENGTH_SHORT).show()
+                          }
+                      }
+
+                      btnAimAssist.setOnClickListener {
+                          Toast.makeText(this, "Aim Assist Toggled", Toast.LENGTH_SHORT).show()
+                      }
+
+                      btnSpeedHack.setOnClickListener {
+                          Toast.makeText(this, "Speed Hack Toggled", Toast.LENGTH_SHORT).show()
                       }
                   }
-
-                  btnFeature1.setOnClickListener {
-                      Toast.makeText(this, "Aim Assist Toggled", Toast.LENGTH_SHORT).show()
-                  }
-
-                  btnFeature2.setOnClickListener {
-                      Toast.makeText(this, "Speed Hack Toggled", Toast.LENGTH_SHORT).show()
-                  }
               }
-          }
-          EOF
+              EOF
+          fi
 
           cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
           distributionBase=GRADLE_USER_HOME
@@ -230,7 +240,7 @@ jobs:
           curl -s https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradlew -o gradlew
           chmod +x gradlew
 
-      - name: Build Real Debug APK
+      - name: Build APK Artifact
         run: ./gradlew assembleDebug
 
       - name: Upload APK Artifact
