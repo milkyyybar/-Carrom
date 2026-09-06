@@ -133,7 +133,7 @@ jobs:
           curl -s https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradlew -o gradlew
           chmod +x gradlew
 
-      - name: Build Debug APK with Stacktrace
+      - name: Build Debug APK with Full Details
         run: ./gradlew assembleDebug --stacktrace --info
 
       - name: Upload APK Artifact
