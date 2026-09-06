@@ -22,9 +22,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Create Project Files
+      - name: Create Real Functional App Files
         run: |
-          mkdir -p app/src/main/java/com/example/carrompanel app/src/main/res/xml gradle/wrapper
+          mkdir -p app/src/main/java/com/example/carrompanel app/src/main/res/layout app/src/main/res/values gradle/wrapper
 
           cat << 'EOF' > settings.gradle
           pluginManagement {
@@ -111,15 +111,107 @@ jobs:
           </manifest>
           EOF
 
+          cat << 'EOF' > app/src/main/res/layout/activity_main.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#121212"
+              android:orientation="vertical"
+              android:padding="24dp"
+              android:gravity="center_horizontal">
+
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="VOID ON TOP PANEL"
+                  android:textColor="#00E676"
+                  android:textSize="22sp"
+                  android:textStyle="bold"
+                  android:layout_marginTop="32dp"
+                  android:layout_marginBottom="24dp" />
+
+              <TextView
+                  android:id="@+id/statusText"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="Status: Panel Inactive"
+                  android:textColor="#B0BEC5"
+                  android:textSize="14sp"
+                  android:gravity="center"
+                  android:layout_marginBottom="32dp" />
+
+              <Button
+                  android:id="@+id/btnToggle"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="Activate Panel"
+                  android:backgroundTint="#00E676"
+                  android:textColor="#000000"
+                  android:textStyle="bold"
+                  android:layout_marginBottom="16dp" />
+
+              <Button
+                  android:id="@+id/btnFeature1"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="Enable Aim Assist"
+                  android:backgroundTint="#1E1E1E"
+                  android:textColor="#FFFFFF"
+                  android:layout_marginBottom="12dp" />
+
+              <Button
+                  android:id="@+id/btnFeature2"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="Enable Speed Hack"
+                  android:backgroundTint="#1E1E1E"
+                  android:textColor="#FFFFFF" />
+
+          </LinearLayout>
+          EOF
+
           cat << 'EOF' > app/src/main/java/com/example/carrompanel/MainActivity.kt
           package com.example.carrompanel
 
           import android.os.Bundle
+          import android.widget.Button
+          import android.widget.TextView
+          import android.widget.Toast
           import androidx.appcompat.app.AppCompatActivity
 
           class MainActivity : AppCompatActivity() {
+              private var isActive = false
+
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
+                  setContentView(R.layout.activity_main)
+
+                  val statusText = findViewById<TextView>(R.id.statusText)
+                  val btnToggle = findViewById<Button>(R.id.btnToggle)
+                  val btnFeature1 = findViewById<Button>(R.id.btnFeature1)
+                  val btnFeature2 = findViewById<Button>(R.id.btnFeature2)
+
+                  btnToggle.setOnClickListener {
+                      isActive = !isActive
+                      if (isActive) {
+                          statusText.text = "Status: Panel Active & Running"
+                          btnToggle.text = "Deactivate Panel"
+                          Toast.makeText(this, "VoidOnTop Activated!", Toast.LENGTH_SHORT).show()
+                      } else {
+                          statusText.text = "Status: Panel Inactive"
+                          btnToggle.text = "Activate Panel"
+                          Toast.makeText(this, "VoidOnTop Deactivated", Toast.LENGTH_SHORT).show()
+                      }
+                  }
+
+                  btnFeature1.setOnClickListener {
+                      Toast.makeText(this, "Aim Assist Toggled", Toast.LENGTH_SHORT).show()
+                  }
+
+                  btnFeature2.setOnClickListener {
+                      Toast.makeText(this, "Speed Hack Toggled", Toast.LENGTH_SHORT).show()
+                  }
               }
           }
           EOF
@@ -138,7 +230,7 @@ jobs:
           curl -s https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradlew -o gradlew
           chmod +x gradlew
 
-      - name: Build Debug APK
+      - name: Build Real Debug APK
         run: ./gradlew assembleDebug
 
       - name: Upload APK Artifact
