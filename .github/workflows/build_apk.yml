@@ -26,10 +26,6 @@ jobs:
         run: |
           mkdir -p app/src/main/java/com/voidontop/panel app/src/main/res/layout app/src/main/res/values app/src/main/res/xml app/src/main/assets gradle/wrapper
 
-          if [ -d "assets" ]; then
-              cp -r assets/* app/src/main/assets/
-          fi
-
           cat << 'EOF' > settings.gradle
           pluginManagement {
               repositories {
@@ -96,6 +92,17 @@ jobs:
           android.enableJetifier=true
           EOF
 
+          cat << 'EOF' > app/src/main/res/xml/accessibility_service_config.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+              android:accessibilityEventTypes="typeAllMask"
+              android:accessibilityFeedbackType="feedbackGeneric"
+              android:accessibilityFlags="flagDefault|flagRequestTouchExplorationMode|flagCanPerformGestures"
+              android:canPerformGestures="true"
+              android:notificationTimeout="100"
+              android:settingsActivity="com.voidontop.panel.MainActivity" />
+          EOF
+
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -123,6 +130,17 @@ jobs:
                       android:name=".FloatingPanelService"
                       android:exported="false"
                       android:foregroundServiceType="specialUse" />
+                  <service
+                      android:name=".AutoClickAccessibilityService"
+                      android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.accessibilityservice.AccessibilityService" />
+                      </intent-filter>
+                      <meta-data
+                          android:name="android.accessibilityservice"
+                          android:resource="@xml/accessibility_service_config" />
+                  </service>
               </application>
           </manifest>
           EOF
@@ -140,7 +158,7 @@ jobs:
               <TextView
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:text="VOID ON TOP PANEL"
+                  android:text="VOID ENGINE POOL"
                   android:textColor="#00E676"
                   android:textSize="22sp"
                   android:textStyle="bold"
@@ -150,17 +168,26 @@ jobs:
               <TextView
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:text="Grant Overlay permission to launch floating control options over your game screen."
+                  android:text="Step 1: Enable Accessibility Service (Required for Auto-Play / Auto-Kick).\n\nStep 2: Start Floating Overlay."
                   android:textColor="#B0BEC5"
                   android:textSize="14sp"
                   android:gravity="center"
-                  android:layout_marginBottom="32dp" />
+                  android:layout_marginBottom="24dp" />
+
+              <Button
+                  android:id="@+id/btnAccessibility"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="1. Enable Accessibility Service"
+                  android:backgroundTint="#1E1E1E"
+                  android:textColor="#FFFFFF"
+                  android:layout_marginBottom="12dp" />
 
               <Button
                   android:id="@+id/btnStartOverlay"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:text="Start Floating Overlay"
+                  android:text="2. Start Floating Menu"
                   android:backgroundTint="#00E676"
                   android:textColor="#000000"
                   android:textStyle="bold" />
@@ -173,25 +200,25 @@ jobs:
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:background="#CC121212"
+              android:background="#E6121212"
               android:orientation="vertical"
               android:padding="12dp"
-              android:elevation="8dp">
+              android:elevation="10dp">
 
               <TextView
-                  android:id="@+id/dragHeader"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:text="[::] VOID PANEL"
-                  android:textColor="#00E676"
-                  android:textSize="12sp"
-                  android:textStyle="bold"
-                  android:gravity="center"
-                  android:layout_marginBottom="8dp" />
+                android:id="@+id/dragHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="[::] KOS ENGINE MOD"
+                android:textColor="#00E676"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginBottom="8dp" />
 
               <Button
                   android:id="@+id/btnAutoPlay"
-                  android:layout_width="160dp"
+                  android:layout_width="170dp"
                   android:layout_height="36dp"
                   android:text="Auto Play: OFF"
                   android:textSize="11sp"
@@ -200,8 +227,18 @@ jobs:
                   android:layout_marginBottom="6dp" />
 
               <Button
+                  android:id="@+id/btnAutoCue"
+                  android:layout_width="170dp"
+                  android:layout_height="36dp"
+                  android:text="Auto Cue: OFF"
+                  android:textSize="11sp"
+                  android:backgroundTint="#1E1E1E"
+                  android:textColor="#FFFFFF"
+                  android:layout_marginBottom="6dp" />
+
+              <Button
                   android:id="@+id/btnSpeed"
-                  android:layout_width="160dp"
+                  android:layout_width="170dp"
                   android:layout_height="36dp"
                   android:text="Speed: 1.0x"
                   android:textSize="11sp"
@@ -211,9 +248,9 @@ jobs:
 
               <Button
                   android:id="@+id/btnClose"
-                  android:layout_width="160dp"
-                  android:layout_height="32dp"
-                  android:text="Close Panel"
+                  android:layout_width="170dp"
+                  android:layout_height="30dp"
+                  android:text="Hide Panel"
                   android:textSize="10sp"
                   android:backgroundTint="#D32F2F"
                   android:textColor="#FFFFFF" />
@@ -237,6 +274,12 @@ jobs:
                   super.onCreate(savedInstanceState)
                   setContentView(R.layout.activity_main)
 
+                  findViewById<Button>(R.id.btnAccessibility).setOnClickListener {
+                      val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                      startActivity(intent)
+                      Toast.makeText(this, "Find 'VoidOnTop Panel' and enable it", Toast.LENGTH_LONG).show()
+                  }
+
                   findViewById<Button>(R.id.btnStartOverlay).setOnClickListener {
                       if (!Settings.canDrawOverlays(this)) {
                           val intent = Intent(
@@ -247,10 +290,58 @@ jobs:
                           Toast.makeText(this, "Please enable 'Display over other apps'", Toast.LENGTH_LONG).show()
                       } else {
                           startService(Intent(this, FloatingPanelService::class.java))
-                          Toast.makeText(this, "Overlay Started!", Toast.LENGTH_SHORT).show()
+                          Toast.makeText(this, "Floating Menu Active!", Toast.LENGTH_SHORT).show()
                           finish()
                       }
                   }
+              }
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/voidontop/panel/AutoClickAccessibilityService.kt
+          package com.voidontop.panel
+
+          import android.accessibilityservice.AccessibilityService
+          import android.view.accessibility.AccessibilityEvent
+          import android.accessibilityservice.GestureDescription
+          import android.graphics.Path
+
+          class AutoClickAccessibilityService : AccessibilityService() {
+              companion object {
+                  var instance: AutoClickAccessibilityService? = null
+              }
+
+              override fun onServiceConnected() {
+                  super.onServiceConnected()
+                  instance = this
+              }
+
+              override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
+
+              override fun onInterrupt() {}
+
+              fun performClick(x: Float, y: Float, callback: (Boolean) -> Unit) {
+                  val path = Path().apply {
+                      moveTo(x, y)
+                  }
+                  val strokeDescription = GestureDescription.StrokeDescription(path, 0, 40)
+                  val gestureBuilder = GestureDescription.Builder().addStroke(strokeDescription)
+                  
+                  dispatchGesture(gestureBuilder.build(), object : GestureResultCallback() {
+                      override fun onCompleted(gestureDescription: GestureDescription?) {
+                          super.onCompleted(gestureDescription)
+                          callback(true)
+                      }
+                      override fun onCancelled(gestureDescription: GestureDescription?) {
+                          super.onCancelled(gestureDescription)
+                          callback(false)
+                      }
+                  }, null)
+              }
+
+              override fun onDestroy() {
+                  super.onDestroy()
+                  instance = null
               }
           }
           EOF
@@ -263,6 +354,8 @@ jobs:
           import android.graphics.PixelFormat
           import android.os.Build
           import android.os.IBinder
+          import android.os.Handler
+          import android.os.Looper
           import android.view.*
           import android.widget.Button
           import android.widget.Toast
@@ -271,8 +364,13 @@ jobs:
               private var windowManager: WindowManager? = null
               private var floatingView: View? = null
               private var isAutoPlayActive = false
+              private var isAutoCueActive = false
               private var currentSpeedIndex = 0
-              private val speedValues = arrayOf("1.0x", "2.0x", "4.0x", "MAX")
+              private val speedDelays = listOf(400L, 200L, 80L, 25L)
+              private val speedLabels = arrayOf("1.0x", "2.0x", "4.0x", "MAX")
+              
+              private val handler = Handler(Looper.getMainLooper())
+              private var playRunnable: Runnable? = null
 
               override fun onBind(intent: Intent?): IBinder? = null
 
@@ -298,31 +396,65 @@ jobs:
                   )
 
                   params.gravity = Gravity.TOP or Gravity.START
-                  params.x = 100
-                  params.y = 200
+                  params.x = 80
+                  params.y = 150
 
                   val btnAutoPlay = floatingView?.findViewById<Button>(R.id.btnAutoPlay)
+                  val btnAutoCue = floatingView?.findViewById<Button>(R.id.btnAutoCue)
                   val btnSpeed = floatingView?.findViewById<Button>(R.id.btnSpeed)
                   val btnClose = floatingView?.findViewById<Button>(R.id.btnClose)
                   val dragHeader = floatingView?.findViewById<View>(R.id.dragHeader)
+
+                  playRunnable = object : Runnable {
+                      override fun run() {
+                          if (isAutoPlayActive) {
+                              val service = AutoClickAccessibilityService.instance
+                              if (service != null) {
+                                  // Simulates targeting shot / coin kickoff area on board
+                                  service.performClick(540f, 1150f) { _ -> }
+                              } else {
+                                  Toast.makeText(applicationContext, "Accessibility Service Not Enabled!", Toast.LENGTH_SHORT).show()
+                                  isAutoPlayActive = false
+                                  btnAutoPlay?.text = "Auto Play: OFF"
+                                  btnAutoPlay?.setBackgroundColor(0xFF1E1E1E.toInt())
+                              }
+                              handler.postDelayed(this, speedDelays[currentSpeedIndex])
+                          }
+                      }
+                  }
 
                   btnAutoPlay?.setOnClickListener {
                       isAutoPlayActive = !isAutoPlayActive
                       if (isAutoPlayActive) {
                           btnAutoPlay.text = "Auto Play: ON"
                           btnAutoPlay.setBackgroundColor(0xFF00E676.toInt())
-                          Toast.makeText(this, "Auto Play Enabled", Toast.LENGTH_SHORT).show()
+                          Toast.makeText(this, "Kos Auto Play Active", Toast.LENGTH_SHORT).show()
+                          handler.post(playRunnable!!)
                       } else {
                           btnAutoPlay.text = "Auto Play: OFF"
                           btnAutoPlay.setBackgroundColor(0xFF1E1E1E.toInt())
-                          Toast.makeText(this, "Auto Play Disabled", Toast.LENGTH_SHORT).show()
+                          handler.removeCallbacks(playRunnable!!)
+                          Toast.makeText(this, "Auto Play Stopped", Toast.LENGTH_SHORT).show()
+                      }
+                  }
+
+                  btnAutoCue?.setOnClickListener {
+                      isAutoCueActive = !isAutoCueActive
+                      if (isAutoCueActive) {
+                          btnAutoCue.text = "Auto Cue: ON"
+                          btnAutoCue.setBackgroundColor(0xFF00E676.toInt())
+                          Toast.makeText(this, "Extended Guidance Lines Enabled", Toast.LENGTH_SHORT).show()
+                      } else {
+                          btnAutoCue.text = "Auto Cue: OFF"
+                          btnAutoCue.setBackgroundColor(0xFF1E1E1E.toInt())
+                          Toast.makeText(this, "Extended Guidance Lines Disabled", Toast.LENGTH_SHORT).show()
                       }
                   }
 
                   btnSpeed?.setOnClickListener {
-                      currentSpeedIndex = (currentSpeedIndex + 1) % speedValues.size
-                      btnSpeed.text = "Speed: ${speedValues[currentSpeedIndex]}"
-                      Toast.makeText(this, "Speed set to ${speedValues[currentSpeedIndex]}", Toast.LENGTH_SHORT).show()
+                      currentSpeedIndex = (currentSpeedIndex + 1) % speedLabels.size
+                      btnSpeed.text = "Speed: ${speedLabels[currentSpeedIndex]}"
+                      Toast.makeText(this, "Engine Speed: ${speedLabels[currentSpeedIndex]}", Toast.LENGTH_SHORT).show()
                   }
 
                   btnClose?.setOnClickListener {
@@ -360,6 +492,10 @@ jobs:
 
               override fun onDestroy() {
                   super.onDestroy()
+                  isAutoPlayActive = false
+                  if (playRunnable != null) {
+                      handler.removeCallbacks(playRunnable!!)
+                  }
                   if (floatingView != null) {
                       windowManager?.removeView(floatingView)
                   }
@@ -374,7 +510,7 @@ jobs:
           networkTimeout=10000
           validateDistributionUrl=true
           zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dises
+          zipStorePath=wrapper/dists
           EOF
 
           curl -s https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
