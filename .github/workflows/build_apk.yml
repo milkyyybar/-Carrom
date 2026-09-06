@@ -97,7 +97,7 @@ jobs:
           <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
               android:accessibilityEventTypes="typeAllMask"
               android:accessibilityFeedbackType="feedbackGeneric"
-              android:accessibilityFlags="flagDefault|flagRequestTouchExplorationMode|flagCanPerformGestures"
+              android:accessibilityFlags="flagDefault|flagRequestTouchExplorationMode"
               android:canPerformGestures="true"
               android:notificationTimeout="100"
               android:settingsActivity="com.voidontop.panel.MainActivity" />
@@ -410,7 +410,6 @@ jobs:
                           if (isAutoPlayActive) {
                               val service = AutoClickAccessibilityService.instance
                               if (service != null) {
-                                  // Simulates targeting shot / coin kickoff area on board
                                   service.performClick(540f, 1150f) { _ -> }
                               } else {
                                   Toast.makeText(applicationContext, "Accessibility Service Not Enabled!", Toast.LENGTH_SHORT).show()
