@@ -133,8 +133,8 @@ jobs:
           curl -s https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradlew -o gradlew
           chmod +x gradlew
 
-      - name: Build Debug APK with Error Reason Output
-        run: ./gradlew assembleDebug --warning-mode all
+      - name: Build Debug APK with Plain Console Output
+        run: ./gradlew assembleDebug --console=plain
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
